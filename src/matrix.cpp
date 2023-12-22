@@ -8,15 +8,23 @@ Matrix::Matrix() {
 }
 
 Matrix::Matrix(size_t rows, size_t cols) {
-    this->data = (float *)calloc(rows * cols, sizeof(float));
+    this->data = new float[rows * cols];
     this->dim[0] = rows;
     this->dim[1] = cols;
 }
+
+Matrix::~Matrix() { delete this->data; }
+
+size_t Matrix::get_dim(size_t axis) const { return this->dim[axis]; }
 
 float &Matrix::at(size_t row, size_t col) {
     assert(row >= 0 || row < this->dim[0]);
     assert(col >= 0 || col < this->dim[1]);
 
+    return this->data[row * this->dim[1] + col];
+}
+
+float &Matrix::operator()(size_t row, size_t col) {
     return this->data[row * this->dim[1] + col];
 }
 
@@ -31,11 +39,29 @@ void Matrix::randomize(PRNG &prng, float min, float max) {
     assert(max >= min);
 
     for (int i = 0; i < this->dim[0] * this->dim[1]; i++) {
-        this->data[i] = (float)prng.generate() / prng.get_max() * (max - min) + min;
+        this->data[i] =
+            (float)prng.generate() / prng.get_max() * (max - min) + min;
     }
 }
 
-size_t Matrix::get_dim(size_t axis) const { return this->dim[axis]; }
+void Matrix::fill(float value) {
+    for (int i = 0; i < this->dim[0]; i++) {
+        for (int j = 0; j < this->dim[1]; j++) {
+            (*this)(i, j) = value;
+        }
+    }
+}
+
+float Matrix::sum() {
+    float total = 0.0f;
+    for (int i = 0; i < this->dim[0]; i++) {
+        for (int j = 0; j < this->dim[1]; j++) {
+            total += (*this)(i, j);
+        }
+    }
+
+    return total;
+}
 
 std::ostream &operator<<(std::ostream &os, const Matrix &m) {
     assert(m.get_dim(0) != 0 && m.get_dim(1) != 0);
