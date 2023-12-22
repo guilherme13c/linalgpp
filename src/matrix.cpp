@@ -52,6 +52,21 @@ void Matrix::fill(float value) {
     }
 }
 
+void Matrix::transpose() {
+    float *transposed = new float[this->dim[0] * this->dim[1]];
+
+    for (int i = 0; i < this->dim[0]; i++) {
+        for (int j = 0; j < this->dim[1]; j++) {
+            transposed[j * this->dim[0] + i] = (*this)(i, j);
+        }
+    }
+
+    std::swap(this->dim[0], this->dim[1]);
+
+    delete[] this->data;
+    this->data = transposed;
+}
+
 float Matrix::sum() {
     float total = 0.0f;
     for (int i = 0; i < this->dim[0]; i++) {

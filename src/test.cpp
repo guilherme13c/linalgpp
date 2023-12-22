@@ -11,5 +11,9 @@ int main(void) {
 
     std::cout << m;
 
+    m.transpose();
+
+    std::cout << m;
+
     return 0;
 }
