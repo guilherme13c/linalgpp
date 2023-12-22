@@ -13,7 +13,7 @@ Matrix::Matrix(size_t rows, size_t cols) {
     this->dim[1] = cols;
 }
 
-Matrix::~Matrix() { delete this->data; }
+Matrix::~Matrix() { delete[] this->data; }
 
 size_t Matrix::get_dim(size_t axis) const { return this->dim[axis]; }
 
