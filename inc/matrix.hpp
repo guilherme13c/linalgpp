@@ -7,39 +7,43 @@
 
 #include "rand.hpp"
 
-class Matrix
-{
-private:
-  float *data;
-  size_t dim[2];
+class Matrix {
+  private:
+    float *data;
+    size_t dim[2];
 
-public:
-  Matrix();
-  Matrix(size_t rows, size_t cols);
+  public:
+    Matrix();
+    Matrix(size_t rows, size_t cols);
 
-  ~Matrix();
+    ~Matrix();
 
-  size_t get_dim(size_t axis) const;
-  float &at(size_t row, size_t col);
-  float read_at(size_t row, size_t col) const;
-  void randomize(PRNG &prng, float min = 0, float max = 1);
-  void fill(float value);
+    size_t get_dim(size_t axis) const;
+    float &at(size_t row, size_t col);
+    float read_at(size_t row, size_t col) const;
+    void randomize(PRNG &prng, float min = 0, float max = 1);
+    void fill(float value);
 
-  void transpose();
+    void transpose();
 
-  Matrix add(Matrix &other);
-  Matrix sub(Matrix &other);
-  Matrix mul(Matrix &other);
-  Matrix mul(float a);
+    Matrix add(Matrix &other);
+    Matrix sub(Matrix &other);
+    Matrix mul(Matrix &other);
+    Matrix mul(float a);
 
-  Matrix apply(float (*f)(float));
+    Matrix apply(float (*f)(float));
 
-  float sum();
+    float sum();
 
-  Matrix expand(Matrix &other, size_t axis = 0);
-  Matrix slice(size_t row0, size_t row1, size_t col0, size_t col1);
+    Matrix expand(Matrix &other, size_t axis = 0);
+    Matrix extract(size_t row0, size_t row1, size_t col0, size_t col1);
 
-  float &operator()(size_t row, size_t col);
+    float &operator()(size_t row, size_t col);
 
-  friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
+    Matrix operator+(Matrix &other);
+    Matrix operator-(Matrix &other);
+    Matrix operator*(Matrix &other);
+    Matrix operator*(float a);
+
+    friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
 };
