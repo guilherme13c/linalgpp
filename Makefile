@@ -1,8 +1,8 @@
 CC = g++
 CFLAGS = -O3 -Wall -Wno-sign-compare -std=c++20 -Iinc
 
-SOURCES := src/matrix.cpp src/test.cpp
-OBJECTS := obj/matrix.o obj/test.o
+SOURCES := src/rand.cpp src/matrix.cpp src/test.cpp
+OBJECTS := obj/rand.o obj/matrix.o obj/test.o
 
 TEST_EXECUTABLE = bin/test
 

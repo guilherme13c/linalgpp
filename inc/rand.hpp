@@ -12,18 +12,9 @@ class PRNG {
 
   public:
     PRNG(uint64_t seed, uint64_t a = 1103515245, uint64_t c = 12345,
-         uint64_t m = 2147483648, uint64_t max = 0x7FFFFFFF) {
-        this->curr = seed;
-        this->max = max;
-        this->a = a;
-        this->c = c;
-        this->m = m;
-    }
+         uint64_t m = 2147483648, uint64_t max = 0x7FFFFFFF);
 
-    int get_max() { return (int)max; }
+    int get_max();
 
-    int generate() {
-        curr = (a * curr + c) % m;
-        return curr & max;
-    }
+    int generate();
 };
