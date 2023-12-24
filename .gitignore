@@ -3,5 +3,8 @@ bin/test
 
 obj/*
 
+lib/*
+lib/linalg.a
+
 .vscode/*
 .vscode/*.json
