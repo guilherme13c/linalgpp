@@ -6,14 +6,17 @@
 int main(void) {
     PRNG g = PRNG(time(NULL));
 
-    Matrix m = Matrix(4, 3);
+    Matrix m = Matrix(4, 4);
     m.randomize(g);
 
+    Matrix n = Matrix(4, 1);
+    n.randomize(g);
+
     std::cout << m;
 
-    m.transpose();
+    Matrix k = m.expand(n, 1);
 
-    std::cout << m;
+    std::cout << k;
 
     return 0;
 }
