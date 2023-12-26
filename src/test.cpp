@@ -1,24 +1,32 @@
 #include <ctime>
 #include <iostream>
 
-#include "linalg.hpp"
+#include <linalg/linalg.hpp>
 
-int main(void) {
+float relu(float a) { return a > 0 ? a : 0; }
+
+int main(int argc, char *argv[]) {
     PRNG g = PRNG(time(NULL));
 
-    Matrix m = Matrix(4, 4);
-    m.randomize(g);
+    Matrix I(2, 1, {1, 0});
 
-    Matrix n = Matrix(4, 1, {1.0f, 2.0f, 3.0f, 4.0f});
-    n.randomize(g);
+    Matrix W(1, 2);
+    W.randomize(g);
 
-    std::cout << m;
+    Matrix B(1, 1);
+    B.randomize(g);
 
-    Matrix k = m.expand(n, 1);
+    std::cout << I;
+    std::cout << W;
+    std::cout << B;
 
-    std::cout << n;
+    Matrix Z = (W * I) + B;
 
-    std::cout << k;
+    std::cout << Z;
+
+    Z.apply(relu);
+
+    std::cout << Z;
 
     return 0;
 }
