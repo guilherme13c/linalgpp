@@ -129,7 +129,7 @@ Matrix Matrix::add(Matrix &other) {
 
     for (size_t i = 0; i < dim[0]; ++i) {
         for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) += other(i, j);
+            result(i, j) = other(i, j) + (*this)(i, j);
         }
     }
 
@@ -143,7 +143,7 @@ Matrix Matrix::sub(Matrix &other) {
 
     for (size_t i = 0; i < dim[0]; ++i) {
         for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) -= other(i, j);
+            result(i, j) = other(i, j) - (*this)(i, j);
         }
     }
 
