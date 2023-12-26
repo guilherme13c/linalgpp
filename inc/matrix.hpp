@@ -2,6 +2,8 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
+#include <initializer_list>
 #include <iomanip>
 #include <iostream>
 
@@ -15,6 +17,7 @@ class Matrix {
   public:
     Matrix();
     Matrix(size_t rows, size_t cols);
+    Matrix(size_t rows, size_t cols, const std::initializer_list<float> &data);
 
     ~Matrix();
 

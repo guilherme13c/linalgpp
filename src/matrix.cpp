@@ -1,5 +1,4 @@
 #include "matrix.hpp"
-#include <iomanip>
 
 Matrix::Matrix() {
     this->data = nullptr;
@@ -11,6 +10,17 @@ Matrix::Matrix(size_t rows, size_t cols) {
     this->data = new float[rows * cols];
     this->dim[0] = rows;
     this->dim[1] = cols;
+}
+
+Matrix::Matrix(size_t rows, size_t cols,
+               const std::initializer_list<float> &initList) {
+    assert(initList.size() == rows * cols);
+
+    this->data = new float[rows * cols];
+    this->dim[0] = rows;
+    this->dim[1] = cols;
+
+    std::memcpy(this->data, initList.begin(), sizeof(float) * rows * cols);
 }
 
 Matrix::~Matrix() { delete[] this->data; }
@@ -210,14 +220,14 @@ Matrix Matrix::expand(Matrix &other, size_t axis) {
     if (axis == 0) {
         for (size_t i = dim[0]; i < nrows; ++i) {
             for (size_t j = 0; j < ncols; ++j) {
-                result(i, j) = other(i-dim[0], j);
+                result(i, j) = other(i - dim[0], j);
             }
         }
-    }else // axis == 1
+    } else // axis == 1
     {
         for (size_t i = 0; i < nrows; ++i) {
             for (size_t j = dim[1]; j < ncols; ++j) {
-                result(i, j) = other(i, j-dim[1]);
+                result(i, j) = other(i, j - dim[1]);
             }
         }
     }
