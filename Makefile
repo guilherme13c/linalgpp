@@ -35,7 +35,7 @@ test: $(TEST_EXECUTABLE)
 clean:
 	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS)
 
-install: $(LIB_SOURCES)
+install: $(LIB_SOURCES) $(LIBRARY)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	cp inc/*.hpp $(INSTALL_INCLUDE_DIR)
 	cp $(LIBRARY) $(INSTALL_LIB_DIR)
