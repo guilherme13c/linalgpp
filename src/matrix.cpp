@@ -20,10 +20,13 @@ Matrix::Matrix(size_t rows, size_t cols,
     this->dim[0] = rows;
     this->dim[1] = cols;
 
-    std::memcpy(this->data, initList.begin(), sizeof(float) * rows * cols);
+    memcpy(this->data, initList.begin(), sizeof(float) * rows * cols);
 }
 
-Matrix::~Matrix() { delete[] this->data; }
+Matrix::~Matrix() {
+    this->dim[0] = 0;
+    this->dim[1] = 0;
+}
 
 size_t Matrix::get_dim(size_t axis) const { return this->dim[axis]; }
 
@@ -120,6 +123,13 @@ std::ostream &operator<<(std::ostream &os, const Matrix &m) {
     os.flags(old_settings);
 
     return os;
+}
+
+Matrix Matrix::copy(Matrix &other) {
+    Matrix m(this->dim[0], this->dim[1]);
+    memcpy(m.data, this->data, this->dim[0] * this->dim[1] * sizeof(float));
+
+    return m;
 }
 
 Matrix Matrix::add(Matrix &other) {
@@ -248,6 +258,8 @@ Matrix Matrix::extract(size_t row0, size_t row1, size_t col0, size_t col1) {
 
     return result;
 }
+
+Matrix Matrix::operator=(Matrix &other) { return this->copy(other); }
 
 Matrix Matrix::operator+(Matrix &other) { return this->add(other); }
 

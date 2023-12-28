@@ -29,6 +29,7 @@ class Matrix {
 
     void transpose();
 
+    Matrix copy(Matrix &other);
     Matrix add(Matrix &other);
     Matrix sub(Matrix &other);
     Matrix mul(Matrix &other);
@@ -47,6 +48,7 @@ class Matrix {
     Matrix operator-(Matrix &other);
     Matrix operator*(Matrix &other);
     Matrix operator*(float a);
+    Matrix operator=(Matrix &other);
 
     friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
 };
