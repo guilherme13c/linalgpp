@@ -18,6 +18,7 @@ class Matrix {
     Matrix();
     Matrix(size_t rows, size_t cols);
     Matrix(size_t rows, size_t cols, const std::initializer_list<float> &data);
+    Matrix(const Matrix &other);
 
     ~Matrix();
 
@@ -29,7 +30,7 @@ class Matrix {
 
     void transpose();
 
-    Matrix copy(Matrix &other);
+    void assign(const Matrix &other);
     Matrix add(Matrix &other);
     Matrix sub(Matrix &other);
     Matrix mul(Matrix &other);
@@ -44,11 +45,11 @@ class Matrix {
 
     float &operator()(size_t row, size_t col);
 
+    Matrix &operator=(const Matrix &other);
     Matrix operator+(Matrix &other);
     Matrix operator-(Matrix &other);
     Matrix operator*(Matrix &other);
     Matrix operator*(float a);
-    Matrix operator=(Matrix &other);
 
     friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
 };

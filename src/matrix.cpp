@@ -1,34 +1,49 @@
 #include "matrix.hpp"
 
 Matrix::Matrix() {
-    this->data = nullptr;
+    this->data = new float[1]();
     this->dim[0] = 0;
     this->dim[1] = 0;
 }
 
 Matrix::Matrix(size_t rows, size_t cols) {
-    this->data = new float[rows * cols];
+    this->data = new float[rows * cols]();
     this->dim[0] = rows;
     this->dim[1] = cols;
+
+    for (int i = 0; i < this->dim[0] * this->dim[1]; i++) {
+        this->data[i] = 0.0f;
+    }
 }
 
 Matrix::Matrix(size_t rows, size_t cols,
                const std::initializer_list<float> &initList) {
     assert(initList.size() == rows * cols);
 
-    this->data = new float[rows * cols];
+    this->data = new float[rows * cols]();
     this->dim[0] = rows;
     this->dim[1] = cols;
 
     memcpy(this->data, initList.begin(), sizeof(float) * rows * cols);
 }
 
-Matrix::~Matrix() {
-    this->dim[0] = 0;
-    this->dim[1] = 0;
+Matrix::Matrix(const Matrix &other) : dim{other.dim[0], other.dim[1]} {
+    size_t totalElements = dim[0] * dim[1];
+    data = new float[totalElements];
+    memcpy(data, other.data, totalElements * sizeof(float));
 }
 
-size_t Matrix::get_dim(size_t axis) const { return this->dim[axis]; }
+Matrix::~Matrix() {
+    if (this->data != nullptr) {
+        delete[] this->data;
+        this->data = nullptr;
+    }
+}
+
+size_t Matrix::get_dim(size_t axis) const {
+    assert(axis == 1 || axis == 0);
+    return this->dim[axis];
+}
 
 float &Matrix::at(size_t row, size_t col) {
     assert(row >= 0 || row < this->dim[0]);
@@ -58,15 +73,13 @@ void Matrix::randomize(PRNG &prng, float min, float max) {
 }
 
 void Matrix::fill(float value) {
-    for (int i = 0; i < this->dim[0]; i++) {
-        for (int j = 0; j < this->dim[1]; j++) {
-            (*this)(i, j) = value;
-        }
+    for (int i = 0; i < this->dim[0] * this->dim[1]; i++) {
+        this->data[i] = value;
     }
 }
 
 void Matrix::transpose() {
-    float *transposed = new float[this->dim[0] * this->dim[1]];
+    float transposed[this->dim[0] * this->dim[1]];
 
     for (int i = 0; i < this->dim[0]; i++) {
         for (int j = 0; j < this->dim[1]; j++) {
@@ -76,8 +89,8 @@ void Matrix::transpose() {
 
     std::swap(this->dim[0], this->dim[1]);
 
-    delete[] this->data;
-    this->data = transposed;
+    memmove(this->data, transposed,
+            this->dim[0] * this->dim[1] * sizeof(float));
 }
 
 float Matrix::sum() {
@@ -125,11 +138,16 @@ std::ostream &operator<<(std::ostream &os, const Matrix &m) {
     return os;
 }
 
-Matrix Matrix::copy(Matrix &other) {
-    Matrix m(this->dim[0], this->dim[1]);
-    memcpy(m.data, this->data, this->dim[0] * this->dim[1] * sizeof(float));
+void Matrix::assign(const Matrix &other) {
+    this->dim[0] = other.dim[0];
+    this->dim[1] = other.dim[1];
 
-    return m;
+    if (this->data != nullptr)
+        delete[] this->data;
+
+    this->data = new float[this->dim[0] * this->dim[1]]();
+
+    memcpy(this->data, other.data, this->dim[0] * this->dim[1] * sizeof(float));
 }
 
 Matrix Matrix::add(Matrix &other) {
@@ -259,7 +277,12 @@ Matrix Matrix::extract(size_t row0, size_t row1, size_t col0, size_t col1) {
     return result;
 }
 
-Matrix Matrix::operator=(Matrix &other) { return this->copy(other); }
+Matrix &Matrix::operator=(const Matrix &other) {
+    if (this != &other) {
+        this->assign(other);
+    }
+    return (*this);
+}
 
 Matrix Matrix::operator+(Matrix &other) { return this->add(other); }
 

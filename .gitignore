@@ -8,3 +8,5 @@ lib/linalg.a
 
 .vscode/*
 .vscode/*.json
+
+valgrind.rpt

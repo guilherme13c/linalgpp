@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O3 -Wall -Wno-sign-compare -std=c++20 -Iinc
+CFLAGS = -Wall -Wno-sign-compare -std=c++20 -Iinc
 
 SOURCES := src/rand.cpp src/matrix.cpp src/test.cpp
 OBJECTS := obj/rand.o obj/matrix.o obj/test.o
@@ -33,9 +33,13 @@ test: $(TEST_EXECUTABLE)
 	bin/test
 
 clean:
-	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS)
+	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS) valgrind.rpt
 
 install: $(LIB_SOURCES) $(LIBRARY)
 	mkdir -p $(INSTALL_INCLUDE_DIR)
 	cp inc/*.hpp $(INSTALL_INCLUDE_DIR)
 	cp $(LIBRARY) $(INSTALL_LIB_DIR)
+
+memcheck: $(TEST_EXECUTABLE)
+	rm -rf valgrind.rpt
+	valgrind --leak-check=yes --track-origins=yes --log-file=valgrind.rpt -s bin/test
