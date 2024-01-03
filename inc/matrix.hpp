@@ -52,5 +52,10 @@ class Matrix {
     Matrix operator*(Matrix &other);
     Matrix operator*(float a);
 
+    Matrix &operator+=(Matrix &other);
+    Matrix &operator-=(Matrix &other);
+    Matrix &operator*=(Matrix &other);
+    Matrix &operator*=(float a);
+
     friend std::ostream &operator<<(std::ostream &os, const Matrix &m);
 };

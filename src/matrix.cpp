@@ -106,13 +106,12 @@ std::ostream &operator<<(std::ostream &os, const Matrix &m) {
 
     std::ios::fmtflags old_settings = os.flags();
 
-    os.precision(5);
+    os.precision(3);
     os.fill(' ');
-    os.setf(std::ios::fixed, std::ios::floatfield);
 
     os << "┌ ";
     for (int i = 0; i < m.get_dim(1); i++) {
-        os << std::setw(8) << " ";
+        os << std::setw(6) << " ";
     }
     os << "┐" << std::endl;
 
@@ -126,7 +125,7 @@ std::ostream &operator<<(std::ostream &os, const Matrix &m) {
 
     os << "└ ";
     for (int i = 0; i < m.get_dim(1); i++) {
-        os << std::setw(8) << " ";
+        os << std::setw(6) << " ";
     }
     os << "┘" << std::endl;
 
@@ -193,7 +192,7 @@ Matrix Matrix::mul(Matrix &other) {
 }
 
 Matrix Matrix::mul(float a) {
-    Matrix result(dim[0], dim[1]);
+    Matrix result(*this);
 
     for (size_t i = 0; i < dim[0]; ++i) {
         for (size_t j = 0; j < dim[1]; ++j) {
@@ -202,6 +201,20 @@ Matrix Matrix::mul(float a) {
     }
 
     return result;
+}
+
+Matrix Matrix::hadamard(Matrix &other) {
+    assert(this->dim[0] == other.dim[0] && this->dim[1] == other.dim[1]);
+
+    Matrix ret(this->dim[0], this->dim[1]);
+
+    for (size_t i = 0; i < this->dim[0]; i++) {
+        for (size_t j = 0; j < this->dim[1]; j++) {
+            ret(i, j) = this->at(i, j) * other.at(i, j);
+        }
+    }
+
+    return ret;
 }
 
 Matrix Matrix::apply(float (*f)(float)) {
@@ -288,3 +301,24 @@ Matrix Matrix::operator-(Matrix &other) { return this->sub(other); }
 Matrix Matrix::operator*(Matrix &other) { return this->mul(other); }
 
 Matrix Matrix::operator*(float a) { return this->mul(a); }
+
+Matrix &Matrix::operator+=(Matrix &other) {
+    (*this) = this->add(other);
+    return (*this);
+}
+
+Matrix &Matrix::operator-=(Matrix &other) {
+    (*this) = this->sub(other);
+    return (*this);
+}
+
+Matrix &Matrix::operator*=(Matrix &other) {
+    (*this) = this->mul(other);
+    return (*this);
+}
+
+Matrix &Matrix::operator*=(float a) {
+    (*this) = this->mul(a);
+
+    return (*this);
+}
