@@ -6,20 +6,23 @@
 int main(int argc, char *argv[]) {
     PRNG g = PRNG(time(NULL));
 
-    Matrix a(10, 10);
+    Matrix a(3, 3);
     a.randomize(g);
 
     std::cout << a;
 
     Matrix b(5, 1);
     b.randomize(g);
+
+    std::cout << b;
+
     b.transpose();
 
     std::cout << b;
 
-    b = a;
+    a = b.transpose();
 
-    std::cout << b;
+    std::cout << a;
 
     return 0;
 }

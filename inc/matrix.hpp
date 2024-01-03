@@ -28,13 +28,14 @@ class Matrix {
     void randomize(PRNG &prng, float min = 0, float max = 1);
     void fill(float value);
 
-    void transpose();
+    Matrix transpose();
 
     void assign(const Matrix &other);
     Matrix add(Matrix &other);
     Matrix sub(Matrix &other);
     Matrix mul(Matrix &other);
     Matrix mul(float a);
+    Matrix hadamard(Matrix &other);
 
     Matrix apply(float (*f)(float));
 

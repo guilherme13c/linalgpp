@@ -78,19 +78,16 @@ void Matrix::fill(float value) {
     }
 }
 
-void Matrix::transpose() {
-    float transposed[this->dim[0] * this->dim[1]];
+Matrix Matrix::transpose() {
+    Matrix transposed(this->dim[1], this->dim[0]);
 
     for (int i = 0; i < this->dim[0]; i++) {
         for (int j = 0; j < this->dim[1]; j++) {
-            transposed[j * this->dim[0] + i] = (*this)(i, j);
+            transposed(j, i) = (*this)(i, j);
         }
     }
 
-    std::swap(this->dim[0], this->dim[1]);
-
-    memmove(this->data, transposed,
-            this->dim[0] * this->dim[1] * sizeof(float));
+    return transposed;
 }
 
 float Matrix::sum() {
