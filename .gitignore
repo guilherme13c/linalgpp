@@ -10,3 +10,5 @@ lib/linalg.a
 .vscode/*.json
 
 valgrind.rpt
+
+*.mtx

@@ -1,6 +1,6 @@
 #include "matrix.hpp"
 
-Matrix::Matrix() {
+Matrix::Matrix(void) {
     this->data = new float[1]();
     this->dim[0] = 0;
     this->dim[1] = 0;
@@ -33,7 +33,7 @@ Matrix::Matrix(const Matrix &other) : dim{other.dim[0], other.dim[1]} {
     memcpy(data, other.data, totalElements * sizeof(float));
 }
 
-Matrix::~Matrix() {
+Matrix::~Matrix(void) {
     if (this->data != nullptr) {
         delete[] this->data;
         this->data = nullptr;
@@ -64,6 +64,8 @@ float Matrix::read_at(size_t row, size_t col) const {
 }
 
 void Matrix::randomize(PRNG &prng, float min, float max) {
+    assert(this->data != nullptr);
+    assert(this->dim[0] != 0 && this->dim[1] != 0);
     assert(max >= min);
 
     for (int i = 0; i < this->dim[0] * this->dim[1]; i++) {
@@ -78,7 +80,7 @@ void Matrix::fill(float value) {
     }
 }
 
-Matrix Matrix::transpose() {
+Matrix Matrix::transpose(void) {
     Matrix transposed(this->dim[1], this->dim[0]);
 
     for (int i = 0; i < this->dim[0]; i++) {
@@ -90,7 +92,7 @@ Matrix Matrix::transpose() {
     return transposed;
 }
 
-float Matrix::sum() {
+float Matrix::sum(void) {
     float total = 0.0f;
     for (int i = 0; i < this->dim[0]; i++) {
         for (int j = 0; j < this->dim[1]; j++) {
@@ -321,4 +323,46 @@ Matrix &Matrix::operator*=(float a) {
     (*this) = this->mul(a);
 
     return (*this);
+}
+
+void Matrix::save(const char *filename) {
+    std::ofstream fp(filename, std::ios::binary | std::ios::out);
+
+    if (fp.is_open()) {
+        fp.write(reinterpret_cast<const char *>(&(this->dim[0])),
+                 sizeof(size_t));
+        fp.write(reinterpret_cast<const char *>(&(this->dim[1])),
+                 sizeof(size_t));
+
+        fp.write(reinterpret_cast<const char *>(data),
+                 dim[0] * dim[1] * sizeof(float));
+
+        fp.close();
+    } else {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        abort();
+    }
+}
+
+void Matrix::load(const char *filename) {
+    std::ifstream fp(filename, std::ios::in | std::ios::binary);
+
+    if (fp.is_open()) {
+        fp.read(reinterpret_cast<char *>(&(this->dim[1])), sizeof(size_t));
+        fp.read(reinterpret_cast<char *>(&(this->dim[0])), sizeof(size_t));
+
+        if (this->data) {
+            delete[] this->data;
+            this->data = nullptr;
+        }
+        this->data = new float[this->dim[0] * this->dim[1]]();
+
+        fp.read(reinterpret_cast<char *>(this->data),
+                this->dim[0] * this->dim[1] * sizeof(float));
+
+        fp.close();
+    } else {
+        std::cerr << "Unable to open file: " << filename << std::endl;
+        abort();
+    }
 }
