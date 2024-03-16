@@ -46,8 +46,8 @@ size_t Matrix::get_dim(size_t axis) const {
 }
 
 float &Matrix::at(size_t row, size_t col) {
-    assert(row >= 0 || row < this->dim[0]);
-    assert(col >= 0 || col < this->dim[1]);
+    assert(row < this->dim[0]);
+    assert(col < this->dim[1]);
 
     return this->data[row * this->dim[1] + col];
 }
@@ -57,8 +57,8 @@ float &Matrix::operator()(size_t row, size_t col) {
 }
 
 float Matrix::read_at(size_t row, size_t col) const {
-    assert(row >= 0 || row < this->dim[0]);
-    assert(col >= 0 || col < this->dim[1]);
+    assert(row < this->dim[0]);
+    assert(col < this->dim[1]);
 
     return this->data[row * this->dim[1] + col];
 }

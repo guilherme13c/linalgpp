@@ -5,23 +5,33 @@
 #include "linalg.hpp"
 
 int main(int argc, char *argv[]) {
-    PRNG g = PRNG(time(NULL));
+    Matrix a(1000, 1000);
 
-    Matrix a(4, 4);
-    std::cout << a;
+    a.fill(3.1415);
 
-    a.randomize(g);
+    // std::cout << a;
 
-    std::cout << a;
+    Matrix b = a;
 
-    a.save("a.mtx");
+    // std::cout << b;
 
-    std::cout << (a.get_dim(0) * a.get_dim(1) * sizeof(float) + 2 * sizeof(size_t)) << std::endl;
+    Matrix c = a * b;
 
-    Matrix b;
-    b.load("a.mtx");
+    Matrix d = c * a;
 
-    std::cout << b;
+    Matrix e = d * a;
+
+    Matrix f = e * a;
+
+    Matrix g = e.hadamard(e);
+
+    Matrix h = d.apply([](float x) { return x * x * x - x; });
+
+    Matrix i = a - b;
+
+    Matrix j = a + c;
+
+    // std::cout << c;
 
     return 0;
 }

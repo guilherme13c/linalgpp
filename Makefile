@@ -11,7 +11,7 @@ CFLAGS = -Wall -Wno-sign-compare $(CPPSTANDARD) -Iinc
 
 CUDA_PATH = /usr/local/cuda-12.4
 CUDA_CC = nvcc
-CUDA_CFLAGS = $(CPPSTANDARD) -Iinc -diag-suppress 186 -I$(CUDA_PATH)/include
+CUDA_CFLAGS = $(CPPSTANDARD) -Iinc -I$(CUDA_PATH)/include
 
 LDFLAGS := -L$(CUDA_PATH)/lib64 -lcudart
 
@@ -55,7 +55,7 @@ $(LIBRARY): $(LIB_OBJECTS)
 build: $(LIBRARY)
 
 test: $(TEST_EXECUTABLE)
-	bin/test
+	d=$$(date +%s%3N); bin/test && echo "Test took $$(($$(date +%s%3N)-d))ms"
 
 clean:
 	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS) valgrind.rpt lib bin obj *.mtx

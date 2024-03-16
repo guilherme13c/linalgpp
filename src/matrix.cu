@@ -1,5 +1,7 @@
 #include "matrix.hpp"
 
+cudaDeviceProp deviceProp;
+
 Matrix::Matrix(void) {
     this->data = new float[1]();
     this->dim[0] = 0;
@@ -46,8 +48,8 @@ size_t Matrix::get_dim(size_t axis) const {
 }
 
 float &Matrix::at(size_t row, size_t col) {
-    assert(row >= 0 || row < this->dim[0]);
-    assert(col >= 0 || col < this->dim[1]);
+    assert(row < this->dim[0]);
+    assert(col < this->dim[1]);
 
     return this->data[row * this->dim[1] + col];
 }
@@ -57,8 +59,8 @@ float &Matrix::operator()(size_t row, size_t col) {
 }
 
 float Matrix::read_at(size_t row, size_t col) const {
-    assert(row >= 0 || row < this->dim[0]);
-    assert(col >= 0 || col < this->dim[1]);
+    assert(row < this->dim[0]);
+    assert(col < this->dim[1]);
 
     return this->data[row * this->dim[1] + col];
 }
@@ -148,85 +150,271 @@ void Matrix::assign(const Matrix &other) {
     memcpy(this->data, other.data, this->dim[0] * this->dim[1] * sizeof(float));
 }
 
+__global__ void addKernel(float *matrix1, float *matrix2, float *result,
+                          int rows, int cols) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows && j < cols) {
+        result[i * cols + j] = matrix1[i * cols + j] + matrix2[i * cols + j];
+    }
+}
+
 Matrix Matrix::add(Matrix &other) {
     assert(dim[0] == other.get_dim(0) && dim[1] == other.get_dim(1));
 
     Matrix result(dim[0], dim[1]);
+    float *d_matrix1, *d_matrix2, *d_result;
 
-    for (size_t i = 0; i < dim[0]; ++i) {
-        for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) = other(i, j) + (*this)(i, j);
-        }
+    cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_matrix2, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * dim[1] * sizeof(float));
+
+    cudaMemcpy(d_matrix1, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix2, other.data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
 
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (dim[1] + blockSize.y - 1) / blockSize.y);
+
+    addKernel<<<gridSize, blockSize>>>(d_matrix1, d_matrix2, d_result, dim[0],
+                                       dim[1]);
+
+    cudaMemcpy(result.data, d_result, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix1);
+    cudaFree(d_matrix2);
+    cudaFree(d_result);
+
     return result;
+}
+
+__global__ void subKernel(float *matrix1, float *matrix2, float *result,
+                          int rows, int cols) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows && j < cols) {
+        result[i * cols + j] = matrix2[i * cols + j] - matrix1[i * cols + j];
+    }
 }
 
 Matrix Matrix::sub(Matrix &other) {
     assert(dim[0] == other.get_dim(0) && dim[1] == other.get_dim(1));
 
     Matrix result(dim[0], dim[1]);
+    float *d_matrix1, *d_matrix2, *d_result;
 
-    for (size_t i = 0; i < dim[0]; ++i) {
-        for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) = other(i, j) - (*this)(i, j);
-        }
+    cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_matrix2, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * dim[1] * sizeof(float));
+
+    cudaMemcpy(d_matrix1, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix2, other.data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
 
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (dim[1] + blockSize.y - 1) / blockSize.y);
+
+    subKernel<<<gridSize, blockSize>>>(d_matrix1, d_matrix2, d_result, dim[0],
+                                       dim[1]);
+
+    cudaMemcpy(result.data, d_result, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix1);
+    cudaFree(d_matrix2);
+    cudaFree(d_result);
+
     return result;
+}
+
+__global__ void mulKernel(float *matrix1, float *matrix2, float *result,
+                          int rows1, int cols1, int cols2) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows1 && j < cols2) {
+        float sum = 0.0f;
+        for (int k = 0; k < cols1; ++k) {
+            sum += matrix1[i * cols1 + k] * matrix2[k * cols2 + j];
+        }
+        result[i * cols2 + j] = sum;
+    }
 }
 
 Matrix Matrix::mul(Matrix &other) {
     assert(dim[1] == other.get_dim(0));
 
     Matrix result(dim[0], other.get_dim(1));
+    float *d_matrix1, *d_matrix2, *d_result;
 
-    for (size_t i = 0; i < dim[0]; ++i) {
-        for (size_t j = 0; j < other.get_dim(1); ++j) {
-            result(i, j) = 0;
-            for (size_t k = 0; k < dim[1]; ++k) {
-                result(i, j) += (*this)(i, k) * other(k, j);
-            }
-        }
+    cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_matrix2, other.get_dim(0) * other.get_dim(1) * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * other.get_dim(1) * sizeof(float));
+
+    cudaMemcpy(d_matrix1, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix2, other.data,
+               other.get_dim(0) * other.get_dim(1) * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
 
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (other.get_dim(1) + blockSize.y - 1) / blockSize.y);
+
+    mulKernel<<<gridSize, blockSize>>>(d_matrix1, d_matrix2, d_result, dim[0],
+                                       dim[1], other.get_dim(1));
+
+    cudaMemcpy(result.data, d_result, dim[0] * other.get_dim(1) * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix1);
+    cudaFree(d_matrix2);
+    cudaFree(d_result);
+
     return result;
+}
+
+__global__ void mulScalarKernel(float *matrix, float scalar, float *result,
+                                int rows, int cols) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows && j < cols) {
+        result[i * cols + j] = matrix[i * cols + j] * scalar;
+    }
 }
 
 Matrix Matrix::mul(float a) {
-    Matrix result(*this);
+    Matrix result(dim[0], dim[1]);
+    float *d_matrix, *d_result;
 
-    for (size_t i = 0; i < dim[0]; ++i) {
-        for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) *= a;
-        }
+    cudaMalloc(&d_matrix, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * dim[1] * sizeof(float));
+
+    cudaMemcpy(d_matrix, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
+
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (dim[1] + blockSize.y - 1) / blockSize.y);
+
+    mulScalarKernel<<<gridSize, blockSize>>>(d_matrix, a, d_result, dim[0],
+                                             dim[1]);
+
+    cudaMemcpy(result.data, d_result, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix);
+    cudaFree(d_result);
 
     return result;
 }
 
+__global__ void hadamardKernel(float *matrix1, float *matrix2, float *result,
+                               int rows, int cols) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows && j < cols) {
+        result[i * cols + j] = matrix1[i * cols + j] * matrix2[i * cols + j];
+    }
+}
+
 Matrix Matrix::hadamard(Matrix &other) {
-    assert(this->dim[0] == other.dim[0] && this->dim[1] == other.dim[1]);
+    assert(dim[0] == other.dim[0] && dim[1] == other.dim[1]);
 
-    Matrix ret(this->dim[0], this->dim[1]);
+    Matrix result(dim[0], dim[1]);
+    float *d_matrix1, *d_matrix2, *d_result;
 
-    for (size_t i = 0; i < this->dim[0]; i++) {
-        for (size_t j = 0; j < this->dim[1]; j++) {
-            ret(i, j) = this->at(i, j) * other.at(i, j);
-        }
+    cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_matrix2, other.dim[0] * other.dim[1] * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * dim[1] * sizeof(float));
+
+    cudaMemcpy(d_matrix1, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(d_matrix2, other.data,
+               other.dim[0] * other.dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
 
-    return ret;
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (dim[1] + blockSize.y - 1) / blockSize.y);
+
+    hadamardKernel<<<gridSize, blockSize>>>(d_matrix1, d_matrix2, d_result,
+                                            dim[0], dim[1]);
+
+    cudaMemcpy(result.data, d_result, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix1);
+    cudaFree(d_matrix2);
+    cudaFree(d_result);
+
+    return result;
+}
+
+__global__ void applyKernel(float *matrix, float *result, int rows, int cols,
+                            float (*f)(float)) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i < rows && j < cols) {
+        result[i * cols + j] = f(matrix[i * cols + j]);
+    }
 }
 
 Matrix Matrix::apply(float (*f)(float)) {
     Matrix result(dim[0], dim[1]);
+    float *d_matrix, *d_result;
 
-    for (size_t i = 0; i < dim[0]; ++i) {
-        for (size_t j = 0; j < dim[1]; ++j) {
-            result(i, j) = f((*this)(i, j));
-        }
+    cudaMalloc(&d_matrix, dim[0] * dim[1] * sizeof(float));
+    cudaMalloc(&d_result, dim[0] * dim[1] * sizeof(float));
+
+    cudaMemcpy(d_matrix, data, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    if (deviceProp.maxThreadsPerBlock <= 0) {
+        cudaGetDeviceProperties(&deviceProp, 0);
     }
+
+    dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+    dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
+                  (dim[1] + blockSize.y - 1) / blockSize.y);
+
+    applyKernel<<<gridSize, blockSize>>>(d_matrix, d_result, dim[0], dim[1], f);
+
+    cudaMemcpy(result.data, d_result, dim[0] * dim[1] * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(d_matrix);
+    cudaFree(d_result);
 
     return result;
 }
