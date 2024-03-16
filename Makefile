@@ -1,11 +1,25 @@
+ifndef CUDA
+    CUDA := false
+else
+    CUDA := true
+endif
+
+CPPSTANDARD = -std=c++20
+
 CC = g++
-CFLAGS = -Wall -Wno-sign-compare -std=c++20 -Iinc
+CFLAGS = -Wall -Wno-sign-compare $(CPPSTANDARD) -Iinc
+
+CUDA_PATH = /usr/local/cuda-12.4
+CUDA_CC = nvcc
+CUDA_CFLAGS = $(CPPSTANDARD) -Iinc -diag-suppress 186 -I$(CUDA_PATH)/include
+
+LDFLAGS := -L$(CUDA_PATH)/lib64 -lcudart
 
 SOURCES := src/rand.cpp src/matrix.cpp src/test.cpp
 OBJECTS := obj/rand.o obj/matrix.o obj/test.o
 
 LIB_SOURCES := src/rand.cpp src/matrix.cpp inc/linalg.hpp inc/rand.hpp inc/matrix.hpp
-LIB_OBJECTS := obj/rand_lib.o obj/matrix_lib.o
+LIB_OBJECTS := obj/rand.o obj/matrix.o
 
 LIBRARY = lib/liblinalg.a
 TEST_EXECUTABLE = bin/test
@@ -13,17 +27,28 @@ TEST_EXECUTABLE = bin/test
 INSTALL_INCLUDE_DIR = /usr/include/linalg
 INSTALL_LIB_DIR = /usr/lib
 
-$(TEST_EXECUTABLE): $(OBJECTS) $(LIBRARY)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $(TEST_EXECUTABLE)
+$(shell mkdir -p lib bin obj)
 
-obj/%.o: src/%.cpp
+$(TEST_EXECUTABLE): $(OBJECTS) $(LIBRARY)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $(TEST_EXECUTABLE) $(LDFLAGS)
+
+obj/rand.o: src/rand.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+obj/matrix.o: src/matrix.cpp src/matrix.cu
+ifeq ($(CUDA),true)
+	@echo "CUDA is enabled"
+	$(CUDA_CC) $(CUDA_CFLAGS) -c src/matrix.cu -o $@
+else
+	@echo "CUDA is disabled"
+	$(CC) $(CFLAGS) -c src/matrix.cpp -o $@
+endif
+
+obj/test.o: src/test.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LIBRARY): $(LIB_OBJECTS)
 	ar rcs $(LIBRARY) $(LIB_OBJECTS)
-
-obj/%_lib.o: src/%.cpp inc/%.hpp
-	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: build test clean install
 
@@ -33,7 +58,7 @@ test: $(TEST_EXECUTABLE)
 	bin/test
 
 clean:
-	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS) valgrind.rpt
+	rm -rf $(OBJECTS) $(TEST_EXECUTABLE) $(LIBRARY) $(LIB_OBJECTS) valgrind.rpt lib bin obj *.mtx
 
 install: $(LIB_SOURCES) $(LIBRARY)
 	mkdir -p $(INSTALL_INCLUDE_DIR)

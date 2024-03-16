@@ -3,12 +3,17 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <dlfcn.h>
+#include <fstream>
 #include <initializer_list>
 #include <iomanip>
-#include <fstream>
 #include <iostream>
 
 #include "rand.hpp"
+
+#ifdef USE_CUDA
+#include <cuda_runtime.h>
+#endif
 
 class Matrix {
   private:

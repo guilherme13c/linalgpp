@@ -8,6 +8,8 @@ int main(int argc, char *argv[]) {
     PRNG g = PRNG(time(NULL));
 
     Matrix a(4, 4);
+    std::cout << a;
+
     a.randomize(g);
 
     std::cout << a;
