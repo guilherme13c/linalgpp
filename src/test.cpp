@@ -5,33 +5,27 @@
 #include "linalg.hpp"
 
 int main(int argc, char *argv[]) {
-    Matrix a(1000, 1000);
+    Matrix a(10, 10);
 
-    a.fill(3.1415);
+    a.fill(2);
 
-    // std::cout << a;
+    std::cout << a;
 
     Matrix b = a;
 
-    // std::cout << b;
+    std::cout << b;
 
     Matrix c = a * b;
 
-    Matrix d = c * a;
+    std::cout << c;
 
-    Matrix e = d * a;
+    Matrix g = b.hadamard(a);
 
-    Matrix f = e * a;
+    std::cout << g;
 
-    Matrix g = e.hadamard(e);
+    Matrix h = g.apply([](float x) { return x * x * x - x; });
 
-    Matrix h = d.apply([](float x) { return x * x * x - x; });
-
-    Matrix i = a - b;
-
-    Matrix j = a + c;
-
-    // std::cout << c;
+    std::cout << h;
 
     return 0;
 }

@@ -11,9 +11,7 @@ Matrix::Matrix(size_t rows, size_t cols) {
     this->dim[0] = rows;
     this->dim[1] = cols;
 
-    for (int i = 0; i < this->dim[0] * this->dim[1]; i++) {
-        this->data[i] = 0.0f;
-    }
+    memset(this->data, 0.0f, this->dim[0] * this->dim[1] * sizeof(float));
 }
 
 Matrix::Matrix(size_t rows, size_t cols,
@@ -208,15 +206,15 @@ Matrix Matrix::mul(float a) {
 Matrix Matrix::hadamard(Matrix &other) {
     assert(this->dim[0] == other.dim[0] && this->dim[1] == other.dim[1]);
 
-    Matrix ret(this->dim[0], this->dim[1]);
+    Matrix result(this->dim[0], this->dim[1]);
 
     for (size_t i = 0; i < this->dim[0]; i++) {
         for (size_t j = 0; j < this->dim[1]; j++) {
-            ret(i, j) = this->at(i, j) * other.at(i, j);
+            result(i, j) = this->at(i, j) * other.at(i, j);
         }
     }
 
-    return ret;
+    return result;
 }
 
 Matrix Matrix::apply(float (*f)(float)) {
