@@ -46,6 +46,7 @@ class Matrix {
     Matrix apply(float (*f)(float));
 
     float sum(void);
+    float trace(void);
 
     Matrix expand(Matrix &other, size_t axis = 0);
     Matrix extract(size_t row0, size_t row1, size_t col0, size_t col1);

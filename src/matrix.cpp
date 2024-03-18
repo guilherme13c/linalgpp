@@ -364,3 +364,14 @@ void Matrix::load(const char *filename) {
         abort();
     }
 }
+
+float Matrix::trace(void) {
+    assert(this->dim[0] == this->dim[1]);
+
+    float ret = 0.0f;
+    for (size_t i = 0; i < this->dim[0]; i++) {
+        ret += (*this)(i, i);
+    }
+
+    return ret;
+}

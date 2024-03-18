@@ -5,7 +5,7 @@
 #include "linalg.hpp"
 
 int main(int argc, char *argv[]) {
-    Matrix a(10, 10);
+    Matrix a(4, 4);
 
     a.fill(2);
 
@@ -26,6 +26,8 @@ int main(int argc, char *argv[]) {
     Matrix h = g.apply([](float x) { return x * x * x - x; });
 
     std::cout << h;
+
+    std::cout << h.trace() << std::endl;
 
     return 0;
 }
