@@ -1,6 +1,9 @@
 #include "matrix.hpp"
 
-cudaDeviceProp deviceProp;
+static struct {
+    cudaDeviceProp deviceProp;
+    int deviceCount;
+} cuda_aux;
 
 Matrix::Matrix(void) {
     this->data = new float[1]();
@@ -163,7 +166,11 @@ Matrix Matrix::add(Matrix &other) {
 
     Matrix result(dim[0], dim[1]);
 
-    if (deviceProp.maxThreadsPerBlock > 0) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         float *d_matrix1, *d_matrix2, *d_result;
 
         cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
@@ -175,11 +182,7 @@ Matrix Matrix::add(Matrix &other) {
         cudaMemcpy(d_matrix2, other.data, dim[0] * dim[1] * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
-        }
-
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (dim[1] + blockSize.y - 1) / blockSize.y);
 
@@ -218,7 +221,11 @@ Matrix Matrix::sub(Matrix &other) {
 
     Matrix result(dim[0], dim[1]);
 
-    if (deviceProp.maxThreadsPerBlock > 0) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         float *d_matrix1, *d_matrix2, *d_result;
 
         cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
@@ -230,11 +237,7 @@ Matrix Matrix::sub(Matrix &other) {
         cudaMemcpy(d_matrix2, other.data, dim[0] * dim[1] * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
-        }
-
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (dim[1] + blockSize.y - 1) / blockSize.y);
 
@@ -277,7 +280,11 @@ Matrix Matrix::mul(Matrix &other) {
 
     Matrix result(dim[0], other.get_dim(1));
 
-    if (deviceProp.maxThreadsPerBlock > 0) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         float *d_matrix1, *d_matrix2, *d_result;
 
         cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
@@ -291,11 +298,7 @@ Matrix Matrix::mul(Matrix &other) {
                    other.get_dim(0) * other.get_dim(1) * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
-        }
-
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (other.get_dim(1) + blockSize.y - 1) / blockSize.y);
 
@@ -334,7 +337,11 @@ __global__ void mulScalarKernel(float *matrix, float scalar, float *result,
 }
 
 Matrix Matrix::mul(float a) {
-    if (deviceProp.maxThreadsPerBlock > 0) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         Matrix result(dim[0], dim[1]);
         float *d_matrix, *d_result;
 
@@ -344,11 +351,11 @@ Matrix Matrix::mul(float a) {
         cudaMemcpy(d_matrix, data, dim[0] * dim[1] * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
+        if (cuda_aux.deviceProp.maxThreadsPerBlock <= 0) {
+            cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
         }
 
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (dim[1] + blockSize.y - 1) / blockSize.y);
 
@@ -389,7 +396,11 @@ Matrix Matrix::hadamard(Matrix &other) {
 
     Matrix result(dim[0], dim[1]);
 
-    if (deviceProp.maxThreadsPerBlock > 0) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         float *d_matrix1, *d_matrix2, *d_result;
 
         cudaMalloc(&d_matrix1, dim[0] * dim[1] * sizeof(float));
@@ -402,11 +413,7 @@ Matrix Matrix::hadamard(Matrix &other) {
                    other.dim[0] * other.dim[1] * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
-        }
-
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (dim[1] + blockSize.y - 1) / blockSize.y);
 
@@ -443,7 +450,11 @@ __global__ void applyKernel(float *matrix, float *result, int rows, int cols,
 Matrix Matrix::apply(float (*f)(float)) {
     Matrix result(dim[0], dim[1]);
 
-    if (deviceProp.maxThreadsPerBlock) {
+    if (cuda_aux.deviceCount == 0) {
+        cudaGetDeviceCount(&cuda_aux.deviceCount);
+        cudaGetDeviceProperties(&cuda_aux.deviceProp, 0);
+    }
+    if (cuda_aux.deviceProp.maxThreadsPerBlock > 0) {
         float *d_matrix, *d_result;
 
         cudaMalloc(&d_matrix, dim[0] * dim[1] * sizeof(float));
@@ -452,11 +463,7 @@ Matrix Matrix::apply(float (*f)(float)) {
         cudaMemcpy(d_matrix, data, dim[0] * dim[1] * sizeof(float),
                    cudaMemcpyHostToDevice);
 
-        if (deviceProp.maxThreadsPerBlock <= 0) {
-            cudaGetDeviceProperties(&deviceProp, 0);
-        }
-
-        dim3 blockSize(deviceProp.maxThreadsPerBlock, 1);
+        dim3 blockSize(cuda_aux.deviceProp.maxThreadsPerBlock, 1);
         dim3 gridSize((dim[0] + blockSize.x - 1) / blockSize.x,
                       (dim[1] + blockSize.y - 1) / blockSize.y);
 
