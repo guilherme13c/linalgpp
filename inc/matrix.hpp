@@ -11,9 +11,7 @@
 
 #include "rand.hpp"
 
-#ifdef USE_CUDA
-#include <cuda_runtime.h>
-#endif
+#include "cuda_runtime.h"
 
 class Matrix {
   private:

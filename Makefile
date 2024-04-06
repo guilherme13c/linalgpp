@@ -4,14 +4,14 @@ else
     CUDA := true
 endif
 
-CPPSTANDARD = -std=c++20
+CPP_STANDARD = -std=c++20
 
 CC = g++
-CFLAGS = -Wall -Wno-sign-compare $(CPPSTANDARD) -Iinc
+CFLAGS = -Wall -Wno-sign-compare $(CPP_STANDARD) -Iinc
 
 CUDA_PATH = /usr/local/cuda-12.4
 CUDA_CC = nvcc
-CUDA_CFLAGS = $(CPPSTANDARD) -Iinc -I$(CUDA_PATH)/include
+CUDA_CFLAGS = $(CPP_STANDARD) -Iinc -I$(CUDA_PATH)/include
 
 LDFLAGS := -L$(CUDA_PATH)/lib64 -lcudart
 
@@ -37,10 +37,8 @@ obj/rand.o: src/rand.cpp
 
 obj/matrix.o: src/matrix.cpp src/matrix.cu
 ifeq ($(CUDA),true)
-	@echo "CUDA is enabled"
 	$(CUDA_CC) $(CUDA_CFLAGS) -c src/matrix.cu -o $@
 else
-	@echo "CUDA is disabled"
 	$(CC) $(CFLAGS) -c src/matrix.cpp -o $@
 endif
 

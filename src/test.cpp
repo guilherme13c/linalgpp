@@ -2,32 +2,24 @@
 #include <filesystem>
 #include <iostream>
 
-#include "linalg.hpp"
+#include <linalg/linalg.hpp>
 
 int main(int argc, char *argv[]) {
-    Matrix a(21000, 21000);
+    PRNG g(time(NULL));
 
-    a.fill(2);
+    Matrix a(4, 4);
 
-    // std::cout << a;
+    a.randomize(g);
+
+    std::cout << a;
 
     Matrix b = a;
 
-    // std::cout << b;
+    std::cout << b;
 
     Matrix c = a * b;
 
-    // std::cout << c;
-
-    Matrix g = b.hadamard(a);
-
-    // std::cout << g;
-
-    Matrix h = g.apply([](float x) { return x * x * x - x; });
-
-    // std::cout << h;
-
-    // std::cout << h.trace() << std::endl;
+    std::cout << c;
 
     return 0;
 }
