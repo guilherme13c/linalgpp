@@ -11,6 +11,8 @@
 
 #include "rand.hpp"
 
+#include <cuda_runtime.h>
+
 class Matrix {
   private:
     float *data;

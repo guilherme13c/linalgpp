@@ -1,4 +1,4 @@
-#include "matrix.hpp"
+#include "matrix.cuh"
 
 static struct {
     cudaDeviceProp deviceProp;
